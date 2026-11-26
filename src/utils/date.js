@@ -10,4 +10,7 @@ function addCycle(dateStr, cycle) {
   return target.toISOString().slice(0, 10);
 }
 
-module.exports = { addCycle };
+// Tanggal hari ini "YYYY-MM-DD" menurut zona waktu WIB
+const today = () => new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Jakarta' });
+
+module.exports = { addCycle, today };

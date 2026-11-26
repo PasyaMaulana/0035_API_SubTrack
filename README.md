@@ -76,7 +76,7 @@ Untuk mengulang seed: `npx sequelize-cli db:seed:undo:all`, lalu `db:seed:all` l
 | Catatan Pembayaran | ✅ Selesai |
 | Grup Patungan | ✅ Selesai |
 | Anggota dan Iuran | ✅ Selesai |
-| Dashboard | ⏳ Belum |
+| Dashboard | ✅ Selesai |
 | Upload foto bukti dan ekspor laporan | ⏳ Belum |
 
 ## 6. Progress Mingguan (Weekly Progress)

@@ -74,7 +74,7 @@ Untuk mengulang seed: `npx sequelize-cli db:seed:undo:all`, lalu `db:seed:all` l
 | Katalog Layanan | ✅ Selesai |
 | Langganan | ✅ Selesai |
 | Catatan Pembayaran | ✅ Selesai |
-| Grup Patungan | ⏳ Belum |
+| Grup Patungan | ✅ Selesai |
 | Anggota dan Iuran | ⏳ Belum |
 | Dashboard | ⏳ Belum |
 | Upload foto bukti dan ekspor laporan | ⏳ Belum |

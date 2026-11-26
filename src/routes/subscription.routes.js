@@ -3,6 +3,7 @@ const validate = require('../middlewares/validate');
 const { authenticate } = require('../middlewares/auth');
 const { createSubscriptionSchema, updateSubscriptionSchema } = require('../validations/subscription.validation');
 const subscriptionController = require('../controllers/subscription.controller');
+const paymentRoutes = require('./payment.routes');
 
 const router = express.Router();
 
@@ -13,5 +14,8 @@ router.get('/:id', subscriptionController.detail);
 router.post('/', validate(createSubscriptionSchema), subscriptionController.create);
 router.put('/:id', validate(updateSubscriptionSchema), subscriptionController.update);
 router.delete('/:id', subscriptionController.remove);
+
+// Catatan pembayaran berada di bawah langganan: /subscriptions/:subscriptionId/payments
+router.use('/:subscriptionId/payments', paymentRoutes);
 
 module.exports = router;

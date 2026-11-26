@@ -15,4 +15,8 @@ const loginSchema = z.object({
   password: z.string().min(1, 'Password wajib diisi'),
 });
 
-module.exports = { registerSchema, loginSchema };
+const refreshSchema = z.object({
+  refreshToken: z.string().min(1, 'Refresh token wajib diisi'),
+});
+
+module.exports = { registerSchema, loginSchema, refreshSchema };

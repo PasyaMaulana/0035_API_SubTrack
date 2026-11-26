@@ -49,4 +49,45 @@ async function login(req, res) {
   return ok(res, 'Login berhasil', { user, ...tokens });
 }
 
-module.exports = { register, login, issueTokens };
+// POST /api/v1/auth/refresh -> tukar Refresh Token lama dengan pasangan token baru (rotasi)
+async function refresh(req, res) {
+  const { refreshToken } = req.body;
+
+  let payload;
+  try {
+    payload = verifyRefreshToken(refreshToken);
+  } catch {
+    return fail(res, 'Refresh token tidak valid atau kedaluwarsa', 401);
+  }
+
+  const user = await User.findByPk(payload.sub);
+  if (!user || !user.refresh_token_hash) {
+    return fail(res, 'Sesi tidak ditemukan, silakan login ulang', 401);
+  }
+
+  // Token valid tetapi bukan yang terakhir disimpan -> kemungkinan dicuri, cabut sesi
+  if (user.refresh_token_hash !== hashToken(refreshToken)) {
+    await user.update({ refresh_token_hash: null, refresh_expires_at: null });
+    return fail(res, 'Sesi tidak valid, silakan login ulang', 401);
+  }
+
+  if (user.refresh_expires_at < new Date()) {
+    return fail(res, 'Sesi berakhir, silakan login ulang', 401);
+  }
+
+  const tokens = await issueTokens(user);
+  return ok(res, 'Token berhasil diperbarui', tokens);
+}
+
+// POST /api/v1/auth/logout -> hapus Refresh Token di database
+async function logout(req, res) {
+  await req.user.update({ refresh_token_hash: null, refresh_expires_at: null });
+  return ok(res, 'Logout berhasil');
+}
+
+// GET /api/v1/auth/me -> data akun yang sedang login
+async function me(req, res) {
+  return ok(res, 'Data akun berhasil diambil', req.user);
+}
+
+module.exports = { register, login, refresh, logout, me, issueTokens };

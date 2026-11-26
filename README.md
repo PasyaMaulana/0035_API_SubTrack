@@ -20,6 +20,7 @@ Project Akhir Pengembangan Aplikasi Mobile (PAM) 2026 (individu).
 | Database | MySQL 8 (driver mysql2) |
 | Validasi input | Zod |
 | Autentikasi | JWT (Access Token dan Refresh Token), bcrypt |
+| Pengujian | Node.js test runner (`node:test`) |
 | Pendukung | dotenv, nodemon |
 
 ## 2. Struktur Repository
@@ -38,6 +39,7 @@ src/
 database/
   migrations/    migration 6 tabel
   seeders/       data demo
+tests/           pengujian otomatis endpoint API
 .env.example     contoh konfigurasi environment
 .sequelizerc     konfigurasi sequelize-cli
 ```
@@ -67,6 +69,14 @@ npm run dev
 Cek server di `http://localhost:3000/api/v1/health`.
 
 Untuk mengulang seed: `npx sequelize-cli db:seed:undo:all`, lalu `db:seed:all` lagi.
+
+### Menjalankan Pengujian
+
+```bash
+npm test
+```
+
+Pengujian memakai test runner bawaan Node.js (`node:test`) dan mencakup 27 skenario: autentikasi, hak akses role, kelima fitur CRUDS, validasi input, dan dashboard. Server dijalankan otomatis di port acak, dan data yang dibuat selama pengujian dihapus kembali setelah selesai.
 
 ## 4. Akun Demo
 
@@ -120,6 +130,7 @@ Format response:
 | Anggota dan Iuran | ✅ Selesai |
 | Dashboard | ✅ Selesai |
 | Penyimpanan nama file bukti pembayaran (`proof_file_name`) | ✅ Selesai |
+| Pengujian otomatis (27 skenario) | ✅ Selesai |
 
 > Foto bukti dan ekspor laporan CSV disimpan di penyimpanan lokal perangkat Android, sehingga dikerjakan di repository Mobile.
 
@@ -139,10 +150,11 @@ Berikut linimasa pengembangan yang disusun dari riwayat git commit:
 
 ### 📅 Minggu 3 (26 November - 2 Desember 2026)
 
-- **Pemisahan Repository dan Dokumentasi** (`e163217`, `320bf30`): backend dipisah dari repository Mobile ke repository API sendiri, ditambah `.gitignore` dan README.
+- **Pemisahan Repository dan Dokumentasi** (`e163217`, `320bf30`, `b44d82b`): backend dipisah dari repository Mobile ke repository API sendiri, ditambah `.gitignore`, README, dan daftar endpoint.
 - **Fondasi API** (`131b30f`): format response seragam, utilitas token JWT, middleware validasi Zod, dan error handler terpusat.
 - **Sistem Autentikasi** (`31f0dc2`, `b541ee7`): register, login, refresh token dengan rotasi, logout, profil akun, serta middleware autentikasi dan otorisasi role Admin/User.
 - **Katalog Layanan** (`5167a6d`): CRUDS katalog layanan digital dengan pencarian dan filter kategori, pengelolaan khusus Admin.
 - **Langganan dan Pembayaran** (`5319892`, `05cda25`): CRUDS langganan milik user dengan perhitungan tanggal tagihan otomatis, serta CRUDS catatan pembayaran per langganan beserta total.
 - **Grup Patungan dan Anggota** (`4c8602d`, `2282f81`): CRUDS grup patungan dengan ringkasan iuran, serta CRUDS anggota dengan status lunas dan pembagian iuran otomatis.
 - **Dashboard** (`4968f7f`): ringkasan pengeluaran, tagihan terdekat, dan iuran untuk User, serta statistik sistem dan layanan terpopuler untuk Admin.
+- **Pengujian Otomatis** (`293366e`): 27 skenario pengujian endpoint dengan `node:test`, mencakup autentikasi, hak akses role, CRUDS, validasi, dan dashboard.

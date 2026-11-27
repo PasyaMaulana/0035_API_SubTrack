@@ -8,6 +8,7 @@ const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const app = require('../src/app');
 const { sequelize, User } = require('../src/models');
+const { today } = require('../src/utils/date');
 
 let server;
 let base;
@@ -170,14 +171,33 @@ test('langganan: validasi dan layanan tidak aktif ditolak', async () => {
 });
 
 test('langganan: tanggal tagihan dihitung otomatis', async () => {
+  // Tanggal mulai jauh di masa depan supaya hasilnya tidak bergantung pada tanggal hari ini
   const r = await api('POST', '/subscriptions', {
     token: tokens.user,
-    body: { service_id: 1, plan_name: 'Premium', price: 186000, billing_cycle: 'BULANAN', start_date: '2026-01-31' },
+    body: { service_id: 1, plan_name: 'Premium', price: 186000, billing_cycle: 'BULANAN', start_date: '2099-01-31' },
   });
   assert.equal(r.status, 201);
-  assert.equal(r.body.data.next_billing_date, '2026-02-28');
+  assert.equal(r.body.data.next_billing_date, '2099-02-28');
   assert.equal(r.body.data.service.name, 'Netflix');
   ids.subscription = r.body.data.id;
+});
+
+test('langganan: tanggal mulai di masa lalu menghasilkan tagihan tidak sebelum hari ini', async () => {
+  const hariIni = today();
+  const r = await api('POST', '/subscriptions', {
+    token: tokens.user,
+    body: { service_id: 1, plan_name: 'Lama', price: 50000, billing_cycle: 'BULANAN', start_date: '2020-01-31' },
+  });
+  assert.equal(r.status, 201);
+  const next = r.body.data.next_billing_date;
+  assert.ok(next >= hariIni, `next_billing_date ${next} sebelum hari ini ${hariIni}`);
+  // Maksimal satu siklus (bulan) setelah hari ini
+  const selisihHari = (Date.parse(next) - Date.parse(hariIni)) / 86400000;
+  assert.ok(selisihHari <= 31, `next_billing_date ${next} terlalu jauh dari hari ini ${hariIni}`);
+  // Tanggal akhir bulan tidak bergeser: hari ke-31 atau hari terakhir bulan tersebut
+  const [y, m, d] = next.split('-').map(Number);
+  assert.equal(d, Math.min(31, new Date(Date.UTC(y, m, 0)).getUTCDate()));
+  assert.equal((await api('DELETE', `/subscriptions/${r.body.data.id}`, { token: tokens.user })).status, 200);
 });
 
 test('langganan: hanya bisa diakses pemiliknya', async () => {

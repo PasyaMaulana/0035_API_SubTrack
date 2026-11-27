@@ -1,7 +1,7 @@
 const { Op } = require('sequelize');
 const { Subscription, DigitalService } = require('../models');
 const { ok, fail } = require('../utils/response');
-const { addCycle } = require('../utils/date');
+const { addCycle, today } = require('../utils/date');
 const { STATUSES } = require('../validations/subscription.validation');
 
 const withService = { model: DigitalService, as: 'service', attributes: ['id', 'name', 'category'] };
@@ -39,8 +39,17 @@ async function create(req, res) {
   const service = await DigitalService.findOne({ where: { id: data.service_id, is_active: true } });
   if (!service) return fail(res, 'Layanan tidak ditemukan atau tidak aktif', 404);
 
-  // Jika tanggal tagihan tidak diisi, hitung otomatis dari tanggal mulai + 1 siklus
-  if (!data.next_billing_date) data.next_billing_date = addCycle(data.start_date, data.billing_cycle);
+  // Jika tanggal tagihan tidak diisi, hitung otomatis: tanggal mulai + 1 siklus,
+  // lalu tambah siklus terus selama masih sebelum hari ini (WIB).
+  // Selalu dihitung dari start_date (siklus ke-n) supaya tanggal akhir bulan tidak bergeser,
+  // contoh mulai 31 Jan: 28 Feb, 31 Mar, 30 Apr (bukan 28 Mar, 28 Apr).
+  if (!data.next_billing_date) {
+    const hariIni = today();
+    let n = 1;
+    let next = addCycle(data.start_date, data.billing_cycle, n);
+    while (next < hariIni) next = addCycle(data.start_date, data.billing_cycle, ++n);
+    data.next_billing_date = next;
+  }
 
   const created = await Subscription.create({ ...data, user_id: req.user.id });
   const subscription = await findOwned(created.id, req.user.id);

@@ -1,5 +1,5 @@
 const { Op } = require('sequelize');
-const { DigitalService } = require('../models');
+const { DigitalService, Subscription, SharedGroup } = require('../models');
 const { ok, fail } = require('../utils/response');
 const { CATEGORIES } = require('../validations/service.validation');
 
@@ -42,10 +42,23 @@ async function update(req, res) {
 }
 
 // DELETE /api/v1/services/:id (Admin)
-// Ditolak jika layanan masih dipakai langganan atau grup (FK RESTRICT -> 409)
+// Ditolak (409) jika layanan masih dipakai langganan atau grup
 async function remove(req, res) {
   const service = await DigitalService.findByPk(req.params.id);
   if (!service) return fail(res, 'Layanan tidak ditemukan', 404);
+
+  // Hitung pemakaian dulu supaya pesan error menyebut jumlahnya
+  const [subscriptionCount, groupCount] = await Promise.all([
+    Subscription.count({ where: { service_id: service.id } }),
+    SharedGroup.count({ where: { service_id: service.id } }),
+  ]);
+  if (subscriptionCount + groupCount > 0) {
+    return fail(
+      res,
+      `Layanan masih dipakai oleh ${subscriptionCount} langganan dan ${groupCount} grup. Nonaktifkan layanan sebagai gantinya.`,
+      409
+    );
+  }
 
   await service.destroy();
   return ok(res, 'Layanan berhasil dihapus');
